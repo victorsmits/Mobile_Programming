@@ -10,8 +10,8 @@ import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -25,6 +25,9 @@ public class MainActivity extends AppCompatActivity {
     Boolean status = false;
     TextView opeView;
     List<String> operation = new ArrayList<String>();
+    private ProgressBar progressBar;
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -35,6 +38,9 @@ public class MainActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
 
         LinearLayout layout = (LinearLayout) findViewById(R.id.linear_layout_tags);
+
+        progressBar = findViewById(R.id.progressBar);
+//        progressBar.setVisibility(View.INVISIBLE);
 
         Button equalsBtn = new Button(this);
         equalsBtn.setTag("=");
@@ -133,11 +139,9 @@ public class MainActivity extends AppCompatActivity {
         }
 
 
-        @Override
+//        @Override
         protected void onPostExecute(Float resultValue) {
             progressBar.setVisibility(View.INVISIBLE);
-            result.setText(String.format("%f", resultValue));
-            textViewQuery.setText("");
         }
 
         @Override

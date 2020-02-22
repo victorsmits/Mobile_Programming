@@ -1,4 +1,4 @@
-package com.example.servercalculator;
+package com.example.async_caluclator;
 
 import android.content.Context;
 
@@ -22,6 +22,6 @@ public class ExampleInstrumentedTest {
         // Context of the app under test.
         Context appContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
 
-        assertEquals("com.example.servercalculator", appContext.getPackageName());
+        assertEquals("com.example.async_caluclator", appContext.getPackageName());
     }
 }
