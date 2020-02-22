@@ -1,5 +1,6 @@
 package com.example.curencyconverter;
 
+import android.os.AsyncTask;
 import android.os.Bundle;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -86,7 +87,10 @@ public class MainActivity extends AppCompatActivity {
     public void equals(View view){
         List<String> ope = new ArrayList<String>(Arrays.asList("+",
                 "-",
-                "*","-","/"));
+                "*",
+                "-",
+                "/"));
+
         if(this.opeView.length() < 3 || ope.contains(this.operation.get(2))){
             Toast.makeText(this, "Please enter a valid operation",
                     Toast.LENGTH_LONG).show();
@@ -95,21 +99,53 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
-        int term1 = Integer.valueOf(this.operation.get(0));
-        int term2 = Integer.valueOf(this.operation.get(2));
-        int result = 0;
-
-
-        switch (this.operation.get(1)){
-            case "+":result = term1 + term2; break;
-            case "-":result = term1 - term2; break;
-            case "*":result = term1 * term2; break;
-            case "/":result = term1 / term2; break;
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            String query = String.join("",this.operation);
         }
 
-        this.resultView.setText(String.valueOf(result));
+        this.resultView.setText(String.valueOf(new AsyncEqual().execute()));
         this.operation.clear();
         this.status = true;
+    }
+
+    public class AsyncEqual extends AsyncTask<String,Integer,Integer> {
+
+        @Override
+        protected Integer doInBackground(String... operation) {
+            int term1 = Integer.valueOf(operation[0]);
+            int term2 = Integer.valueOf(operation[2]);
+            int result = 0;
+
+
+            switch (operation[1]){
+                case "+":result = term1 + term2; break;
+                case "-":result = term1 - term2; break;
+                case "*":result = term1 * term2; break;
+                case "/":result = term1 / term2; break;
+            }
+
+            return result;
+
+        }
+
+        protected void onProgressUpdate(Integer... progress) {
+            progressBar.setProgress(progress[0]);
+        }
+
+
+        @Override
+        protected void onPostExecute(Float resultValue) {
+            progressBar.setVisibility(View.INVISIBLE);
+            result.setText(String.format("%f", resultValue));
+            textViewQuery.setText("");
+        }
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            progressBar.setVisibility(View.VISIBLE);
+        }
+
     }
 
 }
