@@ -1,5 +1,8 @@
 package com.example.servercalculator;
 
+import android.annotation.SuppressLint;
+import android.content.Intent;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 
@@ -8,6 +11,7 @@ import androidx.appcompat.widget.LinearLayoutCompat;
 import androidx.appcompat.widget.Toolbar;
 
 import android.os.Handler;
+import android.provider.Settings;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -17,6 +21,10 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -27,6 +35,9 @@ public class MainActivity extends AppCompatActivity {
     Boolean status = false;
     TextView opeView;
     List<String> operation = new ArrayList<String>();
+    String LastOpe = "";
+    Integer LastRes = 0;
+
     private ProgressBar progressBar;
     private Handler handler;
 
@@ -61,70 +72,6 @@ public class MainActivity extends AppCompatActivity {
         handler = new Handler();
     }
 
-
-    // HANDLER
-
-    public void startProgress(View view) {
-        progressBar.setVisibility(View.VISIBLE);
-        Runnable runnable = new Runnable() {
-            @Override
-            public void run() {
-                List<String> ope = new ArrayList<String>(Arrays.asList("+",
-                        "-",
-                        "*",
-                        "-",
-                        "/"));
-
-                if(opeView.length() < 3 || ope.contains(operation.get(2))){
-                    opeView.setText("");
-                    operation.clear();
-                    return;
-                }
-
-                String query = String.join("",operation);
-
-                final int resultValue = handlerEquals(operation);
-                // simulate a slow network !
-                try {
-                    Thread.sleep(2000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-                handler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        // make the operation on the UI, thus updating progressbar
-                        progressBar.setProgress(4);
-                        resultView.setText(String.valueOf(resultValue));
-                        operation.clear();
-                        status = true;
-                    }
-                });
-                progressBar.setVisibility(View.INVISIBLE);
-                progressBar.setProgress(0);
-            }
-        };
-        new Thread(runnable).start();
-
-    }
-
-    private int handlerEquals(List<String> ope) {
-
-        int term1 = Integer.valueOf(ope.get(0));
-        int term2 = Integer.valueOf(ope.get(2));
-        int result = 0;
-
-        switch (ope.get(1)){
-            case "+":result = term1 + term2; break;
-            case "-":result = term1 - term2; break;
-            case "*":result = term1 * term2; break;
-            case "/":result = term1 / term2; break;
-        }
-
-        return result;
-
-    }
-
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
@@ -141,6 +88,10 @@ public class MainActivity extends AppCompatActivity {
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
+            Intent i = new Intent(this,OptionActivity.class);
+            i.putExtra("LastOpe",LastOpe);
+            i.putExtra("LastRes",LastRes);
+            startActivity(i);
             return true;
         }
 
@@ -182,26 +133,39 @@ public class MainActivity extends AppCompatActivity {
 
     // ASYNC TASK
 
+    @SuppressLint("StaticFieldLeak")
     public class AsyncEqual extends AsyncTask<String,Integer,Integer> {
 
         @Override
         protected Integer doInBackground(String... s) {
-            String ope = Arrays.toString(s);
-            System.out.println("query : " + ope);
-
-            int term1 = (int) ope.charAt(1);
-            int term2 = (int) ope.charAt(3);
             int result = 0;
+            try (Socket socket = new Socket("10.0.2.2", 9877)){
+                String ope = Arrays.toString(s);
+                LastOpe = ope.substring(1,ope.length()-1);
 
-            switch (ope.charAt(2)){
-                case '+':result = term1 + term2; break;
-                case '-':result = term1 - term2; break;
-                case '*':result = term1 * term2; break;
-                case '/':result = term1 / term2; break;
+                DataInputStream InputStream = new DataInputStream(socket.getInputStream());
+                DataOutputStream OutputStream = new DataOutputStream(socket.getOutputStream());
+
+                try{
+                    System.out.println(ope);
+                    for(int i = 1; i < ope.length()-1; i ++){
+                        System.out.println(ope.charAt(i));
+                        OutputStream.writeChar(ope.charAt(i));
+                    }
+                    Thread.sleep(500);
+
+                    result = InputStream.readInt();
+                    LastRes = result;
+                    Thread.sleep(500);
+
+                } catch (InterruptedException e) {
+                    System.out.println(e);
+                }
+
+            } catch (IOException e) {
+                System.out.println(e);
             }
-
             return result;
-
         }
 
         protected void onProgressUpdate(Integer... progress) {
