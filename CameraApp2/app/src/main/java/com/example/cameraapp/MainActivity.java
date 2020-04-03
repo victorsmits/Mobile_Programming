@@ -16,6 +16,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
+import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.Toast;
@@ -26,6 +27,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 public class MainActivity extends AppCompatActivity {
+    private static final String TAG = "MainActivity";
 
     private static final int IMAGE_CAPTURE_CODE = 1001;
     String current_image_path = null;
@@ -97,6 +99,7 @@ public class MainActivity extends AppCompatActivity {
         File storage_dir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
 
         File image_file = File.createTempFile(image_name, ".jpg", storage_dir);
+        Log.d(TAG, "getImageFile: " + image_file);
         current_image_path = image_file.getAbsolutePath();
         return image_file;
     }

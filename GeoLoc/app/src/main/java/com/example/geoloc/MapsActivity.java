@@ -8,7 +8,9 @@ import androidx.fragment.app.FragmentActivity;
 import android.Manifest;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.location.Address;
 import android.location.Criteria;
+import android.location.Geocoder;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -23,14 +25,22 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 
+import java.io.IOException;
+import java.util.List;
+import java.util.Locale;
+
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, LocationListener,
         ActivityCompat.OnRequestPermissionsResultCallback {
     private LocationManager locationManager;
     private String provider;
 
+    private Geocoder geocoder;
+    private List<Address> addresses;
+
     private static final String TAG = "MapsActivity";
 
     private GoogleMap mMap;
+
     private int ACCESS_FINE_LOCATION = 1;
     private int INTERNET = 1;
     private int ACCESS_COARSE_LOCATION = 1;
@@ -161,8 +171,33 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         // Add a marker in Sydney and move the camera
         LatLng sydney = new LatLng(lat, lng);
+
+        geocoder = new Geocoder(this, Locale.getDefault());
+
+        try {
+            addresses = geocoder.getFromLocation(lat, lng, 1);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        String address = getAddress();
+
+        Toast.makeText(this, address, Toast.LENGTH_SHORT).show();
+        Log.d(TAG, "onMapReady: " + address);
+
         mMap.addMarker(new MarkerOptions().position(sydney).title("current localisation"));
         mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));
+    }
+
+    public String getAddress(){
+        String address = addresses.get(0).getAddressLine(0); // If any additional address line present than only, check with max available address lines by getMaxAddressLineIndex()
+        String city = addresses.get(0).getLocality();
+        String state = addresses.get(0).getAdminArea();
+        String country = addresses.get(0).getCountryName();
+        String postalCode = addresses.get(0).getPostalCode();
+        String knownName = addresses.get(0).getFeatureName();
+
+        return address + " " + city + " " + state + " " + country;
     }
 
 }
