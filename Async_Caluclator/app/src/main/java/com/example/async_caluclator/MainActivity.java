@@ -90,6 +90,7 @@ public class MainActivity extends AppCompatActivity {
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
+
                 handler.post(new Runnable() {
                     @Override
                     public void run() {
